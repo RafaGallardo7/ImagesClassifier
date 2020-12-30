@@ -9,7 +9,7 @@ Puedes clasificar las imagenes disponibles o subir cualquier imagen para clasifi
 ## Pasos para utilizar el demo
 
 ```shell
-git clone .git
+git clone https://github.com/RafaGallardo7/ImagesClassifier.git
 ```
 
 ```shell
