@@ -1,0 +1,124 @@
+{% extends 'app.html' %}
+
+{% block html %}
+<div class="container" style="">
+    <div id="content" align="center" style="margin-top:2em">
+        
+    <h2 class="text-bold">Clasificador de imágenes</h2>
+    <h5>Suba una imagen o selecciona una de las disponibles para clasificarla</h5>
+
+    <div class="top50px bottom50px">
+        <div class="row">
+            <div class="col-md-4 images">
+                <img id="imagesPreview1" class="imagesPreview" onClick="predict(1)" src="https://images.freeimages.com/images/large-previews/d3f/cat-1507244.jpg" height="200" width="auto">
+            </div>                                
+            <div class="col-md-4 images">
+                <img id="imagesPreview2" class="imagesPreview" onClick="predict(2)" src="https://images.freeimages.com/images/large-previews/1e7/dog-1376441.jpg" height="200" width="auto">
+            </div>                                
+            <div class="col-md-4 images">
+                <img id="imagesPreview3" class="imagesPreview" onClick="predict(3)" src="https://images.freeimages.com/images/large-previews/0d9/horses-2-1406051.jpg" height="200" width="auto">
+            </div>                                
+        </div>
+
+        <form class="top50px" id="upload-file" method="post" enctype="multipart/form-data">
+            <label for="imageUpload" class="upload-label">
+                Escoger
+            </label>
+            <input type="file" name="image" id="imageUpload" accept=".png, .jpg, .jpeg">
+        </form>            
+
+        <div class="image-section" style="display:none;">
+            <div>
+                <img id="imagePreview" src="" height="256" width="256">
+            </div>                            
+        </div>           
+
+        <div class="loader" style="display:none;"></div>
+
+        <h2 class="top20px">RESULTADO</h2>
+        <h3 id="result">                
+            <span> </span>
+        </h3>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">      
+    let mobileNet;
+    var MyImage = new Image(244,244);
+    
+    $('.image-section').hide();
+    $('.loader').hide();
+    $('#result').hide();
+       
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('#imagePreview').attr('src', e.target.result);
+                $('#imagePreview').hide();
+                $('#imagePreview').fadeIn(650);
+                
+                MyImage.onload = function(){
+                    console.log(MyImage.width); 
+                }
+                MyImage.src = e.target.result;                             
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+        predict(0);  
+    }
+
+    const getBase64FromUrl = async (url) => {
+        const data = await fetch(url);
+        const blob = await data.blob();
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(blob); 
+            reader.onloadend = function() {
+            const base64data = reader.result;   
+            resolve(base64data);
+            }
+        });
+    }
+
+    $("#imageUpload").change(function () {
+        $('.image-section').show();        
+        $('#result').text('');
+        $('#result').hide();   
+        readURL(this);           
+    });
+
+    async function predict(image) {             
+        if (image === 0) {
+            $('.image-section').show();            
+            $('#result').text('');
+            $('#result').hide();
+        }else {
+            $('.image-section').hide();
+        }   
+        
+        if (image === 1) {
+            MyImage.src = await getBase64FromUrl($('#imagesPreview1').attr('src'));
+        }else if (image === 2) {
+            MyImage.src = await getBase64FromUrl($('#imagesPreview2').attr('src'));
+        }else if (image === 3) {
+            MyImage.src = await getBase64FromUrl($('#imagesPreview3').attr('src'));
+        }
+        
+        $('.loader').show();        
+        mobileNet = await mobilenet.load();                
+        const result = await mobileNet.classify(MyImage);        
+        
+        const firstResult = result[0];
+        const className = firstResult.className;        
+        $('.loader').hide();
+        $('#result').fadeIn(600);
+        $('#result').text(className);        
+    }
+
+</script>
+{% endblock %}
